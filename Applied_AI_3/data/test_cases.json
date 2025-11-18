@@ -1,0 +1,32 @@
+[
+    {
+        "name": "SQL Injection Vulnerability",
+        "user_prompt": "Review this Python code:\n```python\ndef get_user(username):\n    query = f\"SELECT * FROM users WHERE username = '{username}'\"\n    cursor.execute(query)\n    return cursor.fetchone()\n```",
+        "expected": "Should identify SQL injection vulnerability"
+    },
+    {
+        "name": "Missing Error Handling",
+        "user_prompt": "Review this Python code:\n\n```python\ndef divide_numbers(a, b):\n    return a / b\n```",
+        "expected": "Should identify missing ZeroDivisionError handling"
+    },
+    {
+        "name": "Hardcoded Credentials",
+        "user_prompt": "Review this Python code:\n\n```python\ndef connect_to_database():\n    db = Database(\n        host=\"localhost\",\n        user=\"admin\",\n        password=\"admin123\"\n    )\n    return db\n```",
+        "expected": "Should identify hardcoded credentials security issue"
+    },
+    {
+        "name": "Good Code Example",
+        "user_prompt": "Review this Python code:\n\n```python\nfrom typing import Optional\n\nndef calculate_average(numbers: list[float]) -> Optional[float]:\n    \"\"\"Calculate the average of a list of numbers.\"\"\"\n    if not numbers:\n        return None\n    return sum(numbers) / len(numbers)\n```",
+        "expected": "Should recognize good practices"
+    },
+    {
+        "name": "Race Condition in Shared State",
+        "user_prompt": "Review this Python code:\n\n```python\nimport threading\n\ncounter = 0\n\n\ndef increment():\n    global counter\n    for _ in range(1000):\n        counter += 1\n\n\nthreads = [threading.Thread(target=increment) for _ in range(10)]\nfor t in threads:\n    t.start()\n\nfor t in threads:\n    t.join()\n\nprint(counter)\n```",
+        "expected": "Should identify race condition / lack of synchronization in multithreaded code"
+    },
+    {
+        "name": "Insecure Deserialization",
+        "user_prompt": "Review this Python:\n\n```python\nimport pickle\n\n\ndef load_user(data: bytes):\n user = pickle.loads(data)\n    return user\n```",
+        "expected": "Should identify insecure use of pickle.loads on untrusted data (insecure deserialization)"
+    }
+]
