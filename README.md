@@ -45,7 +45,12 @@ This will test 4 different prompt variations across 4 test cases and save result
 
 #### Analyze results:
 ```bash
-uv run  analyze_results.py
+uv run analyze_results.py
+```
+
+of draai de testen en analyze in een keer door: 
+```bash
+uv run main.py
 ```
 
 This will show:
