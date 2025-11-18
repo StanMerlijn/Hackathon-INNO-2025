@@ -15,16 +15,15 @@ from pathlib import Path
 
 # Load environment variables from .env file
 load_dotenv()
-
 ROOT_PATH = Path().cwd()
 
 
 class PromptExperiment:
     """Test different prompts for code verification tasks."""
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, client: OpenAI):
         """Initialize with OpenAI API key."""
-        self.client = OpenAI(api_key=api_key or os.environ.get("DEEPSEEK_API_KEY"), base_url="https://api.deepseek.com")
+        self.client = client
         self.results = []
 
     def run_prompt(
@@ -45,7 +44,7 @@ class PromptExperiment:
 
             return {
                 "response": response.choices[0].message.content,
-                "model": model,
+                # "model": model,
                 "tokens_input": response.usage.prompt_tokens,
                 "tokens_output": response.usage.completion_tokens,
                 "time_seconds": elapsed_time,
@@ -108,51 +107,67 @@ class PromptExperiment:
         print(f"\n\nResults saved to {filename}")
 
 
-def main():
+def run_tests(model_clients: list[str]):
     """Run the prompt experiment."""
-    print("Code Verification Prompt Experiment Tester")
-    print("=" * 60)
 
-    # Check for API key
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("\nWarning: OPENAI_API_KEY not found in environment variables")
-        print("Please set it using: export OPENAI_API_KEY='your-key-here'")
-        return
+    for modelClientType in model_clients:
+        print("Code Verification Prompt Experiment Tester")
+        print("=" * 60)
 
-    # Load test cases and prompts from JSON files
-    try:
-        with open(ROOT_PATH / "data/test_cases.json", "r") as f:
-            test_cases = json.load(f)
-        with open(ROOT_PATH / "data/prompts.json", "r") as f:
-            prompt_variations = json.load(f)
-    except FileNotFoundError as e:
-        print(f"\nError: Could not find data files - {e}")
-        print("Make sure data/test_cases.json and data/prompts.json exist")
-        return
-    except json.JSONDecodeError as e:
-        print(f"\nError: Invalid JSON in data files - {e}")
-        return
+        if modelClientType == "openAI":
+            if not os.environ.get("OPENAI_API_KEY"):
+                print("\nWarning: OPENAI_API_KEY not found in environment variables")
+                print("Please set it using: export OPENAI_API_KEY='your-key-here'")
+                return
+            model = "gpt-4.1-mini"
+            client = OpenAI(
+                api_key=os.environ.get("OPENAI_API_KEY"),
+            )
+        elif modelClientType == "deepseek":
+            if not os.environ.get("DEEPSEEK_API_KEY"):
+                print("\nWarning: DEEPSEEK_API_KEY not found in environment variables")
+                print("Please set it using: export DEEPSEEK_API_KEY='your-key-here'")
+                return
+            model = "deepseek-chat"
+            client = OpenAI(
+                api_key=os.environ.get("DEEPSEEK_API_KEY"),
+                base_url="https://api.deepseek.com",
+            )
 
-    # Initialize experiment
-    experiment = PromptExperiment()
+        # Load test cases and prompts from JSON files
+        try:
+            with open(ROOT_PATH / "data/test_cases.json", "r") as f:
+                test_cases = json.load(f)
+            with open(ROOT_PATH / "data/prompts.json", "r") as f:
+                prompt_variations = json.load(f)
+        except FileNotFoundError as e:
+            print(f"\nError: Could not find data files - {e}")
+            print("Make sure data/test_cases.json and data/prompts.json exist")
+            return
+        except json.JSONDecodeError as e:
+            print(f"\nError: Invalid JSON in data files - {e}")
+            return
 
-    # Test each prompt variation
-    for prompt_name, system_prompt in prompt_variations.items():
-        experiment.test_prompt_variation(
-            prompt_name=prompt_name,
-            system_prompt=system_prompt,
-            test_cases=test_cases,
-        model="deepseek-chat",
-        # model="gpt-4.1-mini",
-        )
+        # Initialize experiment
+        experiment = PromptExperiment(client)
 
-    # Save results
-    experiment.save_results("code_verification_results-deepseek.json")
+        # Test each prompt variation
+        for prompt_name, system_prompt in prompt_variations.items():
+            experiment.test_prompt_variation(
+                prompt_name=prompt_name,
+                system_prompt=system_prompt,
+                test_cases=test_cases,
+                model=model,
+            )
 
-    print("\n\nExperiment complete!")
-    print(f"Tested {len(prompt_variations)} prompt variations")
-    print(f"Across {len(test_cases)} test cases")
+        # Save results
+        experiment.save_results(f"code_verification_results-{modelClientType}.json")
+
+        print("\n\nExperiment complete!")
+        print(f"Tested {len(prompt_variations)} prompt variations")
+        print(f"Across {len(test_cases)} test cases")
 
 
 if __name__ == "__main__":
-    main()
+    model_clients = ["openAI", "deepseek"]
+    run_tests(model_clients)

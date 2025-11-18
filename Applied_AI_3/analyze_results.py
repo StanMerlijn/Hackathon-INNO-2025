@@ -105,14 +105,15 @@ def analyze_prompt_performance(results: list):
 
         avg_tokens = (tokens_input + tokens_output) / success_count if success_count > 0 else 0
         avg_time = total_time / success_count if success_count > 0 else 0
-        # OpenAI gpt-4.1-mini
-        output_cost = (tokens_output / 1e6) * 1.6
-        input_cost = (tokens_input / 1e6) * 0.4
-        
-        # Deepseek-chat 
-        # output_cost = (tokens_output / 1e6) * 0.42
-        # input_cost = (tokens_input / 1e6) * 0.28
-        
+        model = prompt_result["model"]
+
+        if (model == "gpt-4.1-mini"):
+            output_cost = (tokens_output / 1e6) * 1.6
+            input_cost = (tokens_input / 1e6) * 0.4
+        elif (model == "deepseek-chat"):
+            output_cost = (tokens_output / 1e6) * 0.42
+            input_cost = (tokens_input / 1e6) * 0.28
+            
         print(f"Success Rate: {success_count}/{len(test_results)}")
         print(f"correct responses: {num_correct}/{len(test_results)}")
         print(f"Avg Tokens: {avg_tokens:.0f}")
@@ -134,40 +135,21 @@ def analyze_prompt_performance(results: list):
 
             print(f"  {success:<8} {matches:<8} {test_name}")
 
-
-def compare_responses(results: list, test_case_name: str):
-    """Compare how different prompts handled the same test case."""
-    print(f"\n\n🔍 Comparing Responses for: {test_case_name}")
-    print("=" * 80)
-
-    for prompt_result in results:
-        prompt_name = prompt_result["prompt_name"]
-
-        # Find the specific test case
-        for test in prompt_result["test_results"]:
-            if test["test_case"] == test_case_name:
-                print(f"\n{prompt_name.upper()}:")
-                print("-" * 80)
-                if test["result"]["success"]:
-                    print(test["result"]["response"])
-                else:
-                    print(f"Error: {test['result']['error']}")
-                break
-
-
-def main():
+def analyze_results(model_clients: list[str]):
     """Run the analysis."""
-    try:
-        results = load_results()
+    for modelClientType in model_clients:
+        try:
+            results = load_results(f"code_verification_results-{modelClientType}.json")
 
-        # Overall performance analysis
-        analyze_prompt_performance(results)
+            # Overall performance analysis
+            analyze_prompt_performance(results)
 
-    except FileNotFoundError:
-        print("❌ Results file not found. Please run prompt_tester.py first.")
-    except Exception as e:
-        print(f"❌ Error analyzing results: {e}")
+        except FileNotFoundError:
+            print("❌ Results file not found. Please run prompt_tester.py first.")
+        except Exception as e:
+            print(f"❌ Error analyzing results: {e}")
 
 
 if __name__ == "__main__":
-    main()
+    model_clients = ["openAI", "deepseek"]
+    analyze_results(model_clients)
